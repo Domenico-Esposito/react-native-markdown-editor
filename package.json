@@ -1,5 +1,5 @@
 {
-  "name": "react-native-markdown-editor",
+  "name": "@domenico-esposito/react-native-markdown-editor",
   "version": "0.1.0",
   "description": "Markdown Editor for React Native",
   "main": "build/index.js",
@@ -20,13 +20,13 @@
     "react-native-markdown-editor",
     "ReactNativeMarkdownEditor"
   ],
-  "repository": "https://github.com/Domenico-Esposito/react-native-markdown-editor",
+  "repository": "https://github.com/domenico-esposito/react-native-markdown-editor.git",
   "bugs": {
-    "url": "https://github.com/Domenico-Esposito/react-native-markdown-editor/issues"
+    "url": "https://github.com/domenico-esposito/react-native-markdown-editor/issues"
   },
-  "author": "Domenico Esposito (Deploynk) <mail@domenicoesposito.it> (https://github.com/Domenico-Esposito)",
+  "author": "Domenico Esposito (Deploynk) <mail@domenicoesposito.it> (https://github.com/domenico-esposito)",
   "license": "MIT",
-  "homepage": "https://github.com/Domenico-Esposito/react-native-markdown-editor#readme",
+  "homepage": "https://github.com/domenico-esposito/react-native-markdown-editor#readme",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
