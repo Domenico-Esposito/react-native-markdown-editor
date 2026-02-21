@@ -15,9 +15,7 @@ A fully native Markdown editor for React Native with real-time syntax highlighti
 ## Installation
 
 ```bash
-npm install react-native-markdown-editor
-# or
-yarn add react-native-markdown-editor
+npm install @domenico-esposito/react-native-markdown-editor
 ```
 
 ## Usage
