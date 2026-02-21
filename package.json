@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Markdown Editor for React Native",
   "main": "build/index.js",
+  "source": "src/index.ts",
   "types": "build/index.d.ts",
   "scripts": {
     "build": "expo-module build",
@@ -11,9 +12,7 @@
     "test": "expo-module test",
     "prepare": "expo-module prepare",
     "prepublishOnly": "expo-module prepublishOnly",
-    "expo-module": "expo-module",
-    "open:ios": "xed example/ios",
-    "open:android": "open -a \"Android Studio\" example/android"
+    "expo-module": "expo-module"
   },
   "keywords": [
     "react-native",
@@ -28,16 +27,19 @@
   "author": "Domenico Esposito (Deploynk) <mail@domenicoesposito.it> (https://github.com/Domenico-Esposito)",
   "license": "MIT",
   "homepage": "https://github.com/Domenico-Esposito/react-native-markdown-editor#readme",
-  "dependencies": {},
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
-    "expo-module-scripts": "^5.0.8",
     "expo": "^54.0.27",
-    "react-native": "0.81.5"
+    "expo-module-scripts": "^5.0.8",
+    "jest": "^30.2.0",
+    "react-native": "0.81.5",
+    "ts-jest": "^29.4.6"
   },
   "peerDependencies": {
     "expo": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-safe-area-context": "*"
   }
 }
