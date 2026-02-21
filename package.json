@@ -1,6 +1,6 @@
 {
   "name": "@domenico-esposito/react-native-markdown-editor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Markdown Editor for React Native",
   "main": "build/index.js",
   "source": "src/index.ts",
