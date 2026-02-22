@@ -163,7 +163,7 @@ function ImageInfoModal({ editor }: ImageInfoModalProps) {
 
 export default function App() {
 	const [value, setValue] = React.useState(initialValue);
-	const [showRenderer, setShowRenderer] = React.useState(false);
+	const [view, setView] = React.useState<'editor' | 'renderer' | 'raw'>('editor');
 
 	const editor = useMarkdownEditor({
 		value,
@@ -177,13 +177,22 @@ export default function App() {
 					<ScrollView keyboardShouldPersistTaps="always" contentContainerStyle={styles.content}>
 						<Text style={styles.title}>React Native Markdown Editor</Text>
 
-						<Pressable style={styles.toggleButton} onPress={() => setShowRenderer((prev) => !prev)}>
-							<Text style={styles.toggleButtonText}>{showRenderer ? 'Show Editor' : 'Show Renderer'}</Text>
-						</Pressable>
+						<View style={styles.toggleRow}>
+							<Pressable style={styles.toggleButton} onPress={() => setView(view === 'renderer' ? 'editor' : 'renderer')}>
+								<Text style={styles.toggleButtonText}>{view === 'renderer' ? 'Show Editor' : 'Show Renderer'}</Text>
+							</Pressable>
+							<Pressable style={styles.toggleButton} onPress={() => setView(view === 'raw' ? 'editor' : 'raw')}>
+								<Text style={styles.toggleButtonText}>{view === 'raw' ? 'Show Editor' : 'Show Raw'}</Text>
+							</Pressable>
+						</View>
 
-						{showRenderer ? (
+						{view === 'renderer' ? (
 							<View style={styles.rendererWrapper}>
 								<MarkdownRenderer markdown={value} components={customRendererComponents} />
+							</View>
+						) : view === 'raw' ? (
+							<View style={styles.rendererWrapper}>
+								<Text style={styles.rawMarkdownText} selectable>{value}</Text>
 							</View>
 						) : (
 							<View style={styles.editorWrapper}>
@@ -241,6 +250,10 @@ const styles = StyleSheet.create({
 		borderColor: '#d0d0d0',
 		padding: 12,
 	},
+	toggleRow: {
+		flexDirection: 'row',
+		gap: 8,
+	},
 	toggleButton: {
 		alignSelf: 'flex-start',
 		backgroundColor: '#2d5eff',
@@ -252,6 +265,12 @@ const styles = StyleSheet.create({
 		color: '#fff',
 		fontWeight: '700',
 		fontSize: 14,
+	},
+	rawMarkdownText: {
+		fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+		fontSize: 14,
+		lineHeight: 20,
+		color: '#1f1f1f',
 	},
 	toolbar: {
 		marginBottom: 0,
