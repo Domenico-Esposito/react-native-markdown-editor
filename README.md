@@ -12,6 +12,30 @@ A fully native Markdown editor for React Native with real-time syntax highlighti
 - 📄 **Read-Only Renderer**: `MarkdownRenderer` component to display markdown without editing.
 - 📱 **Cross-Platform**: Support for iOS, Android, and Web (Expo), with native syntax highlighting on all platforms.
 
+### Supported Markdown Features
+
+| Feature          | Syntax                          | Toolbar Action     |
+| ---------------- | ------------------------------- | ------------------ |
+| Bold             | `**text**`                      | `bold`             |
+| Italic           | `_text_`                        | `italic`           |
+| Strikethrough    | `~~text~~`                      | `strikethrough`    |
+| Inline Code      | `` `code` ``                    | `code`             |
+| Code Block       | ` ``` `                         | `codeBlock`        |
+| Heading 1        | `# `                            | `heading1`         |
+| Heading 2        | `## `                           | `heading2`         |
+| Heading 3        | `### `                          | `heading3`         |
+| Heading 4        | `#### `                         | `heading4`         |
+| Heading 5        | `##### `                        | `heading5`         |
+| Heading 6        | `###### `                       | `heading6`         |
+| Blockquote       | `> `                            | `quote`            |
+| Unordered List   | `- `                            | `unorderedList`    |
+| Ordered List     | `1. `                           | `orderedList`      |
+| Horizontal Rule  | `---`                           | `divider`          |
+| Image            | `![alt](url)`                   | `image`            |
+| Link             | `[text](url)`                   | —                  |
+
+All features are enabled by default. You can selectively enable a subset via the `features` option (see [Limiting Enabled Features](#limiting-enabled-features)).
+
 ## Installation
 
 ```bash
@@ -119,7 +143,7 @@ Input component with live highlighting. Requires `editor`.
 | Prop                | Type                   | Default      | Description                                                                                     |
 | ------------------- | ---------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
 | `editor`            | `MarkdownEditorHandle` | **Required** | Handle returned by `useMarkdownEditor`.                                                         |
-| `segmentComponents` | `SegmentComponentMap`  | -            | Override renderers for highlighted segments.                                                    |
+| `segmentComponents` | `SegmentComponentMap`  | -            | Override renderers for highlighted segments. Each component **must** be a `Text`-based component (or return `Text`), since segments are rendered as children of `TextInput`, which only supports `Text` children on native platforms. |
 | `textInputStyle`    | `TextStyle`            | -            | Style for the inner `TextInput`.                                                                |
 | `style`             | `ViewStyle`            | -            | Style for the outer container.                                                                  |
 | `...rest`           | `TextInputProps`       | -            | All other `TextInput` props (except `value`, `onChangeText`, `onSelectionChange`, `multiline`). |
