@@ -30,9 +30,14 @@ function styleToCSS(s: Record<string, any>): string {
 }
 
 function segmentsToHTML(segments: HighlightSegment[]): string {
-	return segments
+	const html = segments
 		.map((seg) => `<span style="${styleToCSS(getDefaultSegmentStyle(seg.type, seg.meta))}">${escapeHTML(seg.text)}</span>`)
 		.join('');
+	const lastSeg = segments.length > 0 ? segments[segments.length - 1] : null;
+	if (lastSeg && lastSeg.text.endsWith('\n')) {
+		return html + '<br data-tail="1">';
+	}
+	return html;
 }
 
 function textOffset(root: Node, target: Node, off: number): number {
@@ -68,7 +73,14 @@ function restoreCursor(el: HTMLElement, pos: { start: number; end: number }) {
 	while ((n = tw.nextNode())) {
 		const len = (n as Text).length;
 		if (!startSet && idx + len >= pos.start) {
-			range.setStart(n, pos.start - idx);
+			const offset = pos.start - idx;
+			// When cursor is right after a trailing \n in a text node,
+			// skip to the next node so the cursor lands on the new line.
+			if (offset === len && (n as Text).data.endsWith('\n')) {
+				idx += len;
+				continue;
+			}
+			range.setStart(n, offset);
 			startSet = true;
 		}
 		if (startSet && idx + len >= pos.end) {
@@ -92,7 +104,9 @@ function extractText(el: HTMLElement): string {
 			text += node.textContent;
 		} else if (node.nodeType === Node.ELEMENT_NODE) {
 			if ((node as HTMLElement).tagName === 'BR') {
-				text += '\n';
+				if (!(node as HTMLElement).hasAttribute('data-tail')) {
+					text += '\n';
+				}
 			} else {
 				for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
 			}
@@ -149,12 +163,22 @@ export default function MarkdownTextInput({ editor, style, textInputStyle, segme
 		if (pos) editor.handleSelectionChange({ nativeEvent: { selection: pos } } as any);
 	}, [editor.handleSelectionChange]);
 
-	const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			document.execCommand('insertText', false, '\n');
-		}
-	}, []);
+	const handleKeyDown = React.useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				const el = editableRef.current;
+				if (!el) return;
+				const pos = saveCursor(el);
+				if (!pos) return;
+				const newText = editor.value.slice(0, pos.start) + '\n' + editor.value.slice(pos.end);
+				const newCursor = pos.start + 1;
+				cursorRef.current = { start: newCursor, end: newCursor };
+				editor.handleChangeText(newText);
+			}
+		},
+		[editor.value, editor.handleChangeText],
+	);
 
 	const handlePaste = React.useCallback((e: React.ClipboardEvent) => {
 		e.preventDefault();
