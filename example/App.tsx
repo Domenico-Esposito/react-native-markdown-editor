@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { MarkdownTextInput, MarkdownToolbar, MarkdownRenderer, useMarkdownEditor } from 'react-native-markdown-editor';
 import type {
@@ -184,6 +184,11 @@ export default function App() {
 							<Pressable style={styles.toggleButton} onPress={() => setView(view === 'raw' ? 'editor' : 'raw')}>
 								<Text style={styles.toggleButtonText}>{view === 'raw' ? 'Show Editor' : 'Show Raw'}</Text>
 							</Pressable>
+							{Platform.OS !== 'web' && (
+								<Pressable style={styles.dismissButton} onPress={() => Keyboard.dismiss()}>
+									<Text style={styles.toggleButtonText}>⌨ Dismiss</Text>
+								</Pressable>
+							)}
 						</View>
 
 						{view === 'renderer' ? (
@@ -192,7 +197,9 @@ export default function App() {
 							</View>
 						) : view === 'raw' ? (
 							<View style={styles.rendererWrapper}>
-								<Text style={styles.rawMarkdownText} selectable>{value}</Text>
+								<Text style={styles.rawMarkdownText} selectable>
+									{value}
+								</Text>
 							</View>
 						) : (
 							<View style={styles.editorWrapper}>
@@ -257,6 +264,13 @@ const styles = StyleSheet.create({
 	toggleButton: {
 		alignSelf: 'flex-start',
 		backgroundColor: '#2d5eff',
+		borderRadius: 10,
+		paddingVertical: 8,
+		paddingHorizontal: 16,
+	},
+	dismissButton: {
+		alignSelf: 'flex-start',
+		backgroundColor: '#666',
 		borderRadius: 10,
 		paddingVertical: 8,
 		paddingHorizontal: 16,
