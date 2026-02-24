@@ -33,6 +33,7 @@
   "license": "MIT",
   "homepage": "https://github.com/domenico-esposito/react-native-markdown-editor#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "expo": "^54.0.27",
