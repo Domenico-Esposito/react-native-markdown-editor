@@ -29,10 +29,65 @@ function styleToCSS(s: Record<string, any>): string {
 	return p.join(';');
 }
 
-function segmentsToHTML(segments: HighlightSegment[]): string {
-	return segments
-		.map((seg) => `<span style="${styleToCSS(getDefaultSegmentStyle(seg.type, seg.meta))}">${escapeHTML(seg.text)}</span>`)
+/**
+ * Walks a React element tree and collects flattened style objects
+ * from each nested element (outer-to-inner order).
+ */
+function collectNestedStyles(element: any): Record<string, any>[] {
+	const styles: Record<string, any>[] = [];
+	let current = element;
+	while (current && typeof current === 'object' && current.props) {
+		if (current.props.style) {
+			const flat = StyleSheet.flatten(current.props.style) as Record<string, any>;
+			if (flat) styles.push(flat);
+		}
+		const children = current.props.children;
+		if (children && typeof children === 'object' && !Array.isArray(children) && children.props) {
+			current = children;
+		} else if (Array.isArray(children)) {
+			const reactChild = children.find((c: any) => c && typeof c === 'object' && c.props);
+			if (reactChild) {
+				current = reactChild;
+			} else {
+				break;
+			}
+		} else {
+			break;
+		}
+	}
+	return styles;
+}
+
+/**
+ * Calls a segment component and extracts the merged style from all nested
+ * Text elements in its React tree. Falls back to the built-in default style
+ * when the component uses hooks, is a class component, or returns no styled elements.
+ */
+function resolveSegmentStyle(Component: React.ComponentType<any>, type: string, meta?: Record<string, string>): Record<string, any> {
+	try {
+		const element = (Component as any)({ type, meta, children: null });
+		const styles = collectNestedStyles(element);
+		if (styles.length > 0) {
+			return Object.assign({}, ...styles);
+		}
+	} catch {
+		// Component uses hooks or is a class — fall back to defaults.
+	}
+	return getDefaultSegmentStyle(type as any, meta);
+}
+
+function segmentsToHTML(segments: HighlightSegment[], componentMap: Record<string, React.ComponentType<any>>): string {
+	const html = segments
+		.map((seg) => {
+			const style = resolveSegmentStyle(componentMap[seg.type], seg.type, seg.meta);
+			return `<span style="${styleToCSS(style)}">${escapeHTML(seg.text)}</span>`;
+		})
 		.join('');
+	const lastSeg = segments.length > 0 ? segments[segments.length - 1] : null;
+	if (lastSeg && lastSeg.text.endsWith('\n')) {
+		return html + '<br data-tail="1">';
+	}
+	return html;
 }
 
 function textOffset(root: Node, target: Node, off: number): number {
@@ -68,7 +123,14 @@ function restoreCursor(el: HTMLElement, pos: { start: number; end: number }) {
 	while ((n = tw.nextNode())) {
 		const len = (n as Text).length;
 		if (!startSet && idx + len >= pos.start) {
-			range.setStart(n, pos.start - idx);
+			const offset = pos.start - idx;
+			// When cursor is right after a trailing \n in a text node,
+			// skip to the next node so the cursor lands on the new line.
+			if (offset === len && (n as Text).data.endsWith('\n')) {
+				idx += len;
+				continue;
+			}
+			range.setStart(n, offset);
 			startSet = true;
 		}
 		if (startSet && idx + len >= pos.end) {
@@ -92,7 +154,9 @@ function extractText(el: HTMLElement): string {
 			text += node.textContent;
 		} else if (node.nodeType === Node.ELEMENT_NODE) {
 			if ((node as HTMLElement).tagName === 'BR') {
-				text += '\n';
+				if (!(node as HTMLElement).hasAttribute('data-tail')) {
+					text += '\n';
+				}
 			} else {
 				for (let i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
 			}
@@ -118,16 +182,15 @@ export default function MarkdownTextInput({ editor, style, textInputStyle, segme
 	const cursorRef = React.useRef<{ start: number; end: number } | null>(null);
 
 	// Web: sync highlighted segments into contentEditable DOM
-	// biome-ignore lint: segments is the only meaningful dep
 	React.useLayoutEffect(() => {
 		if (!isWeb) return;
 		const el = editableRef.current;
 		if (!el) return;
 		const cursor = cursorRef.current ?? saveCursor(el);
-		el.innerHTML = segmentsToHTML(editor.highlightedSegments);
+		el.innerHTML = segmentsToHTML(editor.highlightedSegments, components);
 		if (cursor) restoreCursor(el, cursor);
 		cursorRef.current = null;
-	}, [editor.highlightedSegments]);
+	}, [editor.highlightedSegments, components]);
 
 	// Web: apply programmatic selection from editor (e.g. after toolbar actions)
 	React.useEffect(() => {
@@ -149,12 +212,22 @@ export default function MarkdownTextInput({ editor, style, textInputStyle, segme
 		if (pos) editor.handleSelectionChange({ nativeEvent: { selection: pos } } as any);
 	}, [editor.handleSelectionChange]);
 
-	const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			document.execCommand('insertText', false, '\n');
-		}
-	}, []);
+	const handleKeyDown = React.useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				const el = editableRef.current;
+				if (!el) return;
+				const pos = saveCursor(el);
+				if (!pos) return;
+				const newText = editor.value.slice(0, pos.start) + '\n' + editor.value.slice(pos.end);
+				const newCursor = pos.start + 1;
+				cursorRef.current = { start: newCursor, end: newCursor };
+				editor.handleChangeText(newText);
+			}
+		},
+		[editor.value, editor.handleChangeText],
+	);
 
 	const handlePaste = React.useCallback((e: React.ClipboardEvent) => {
 		e.preventDefault();
@@ -185,8 +258,7 @@ export default function MarkdownTextInput({ editor, style, textInputStyle, segme
 								fontSize: 16,
 								pointerEvents: 'none' as const,
 								userSelect: 'none' as const,
-							}}
-						>
+							}}>
 							{textInputProps.placeholder}
 						</div>
 					) : null}

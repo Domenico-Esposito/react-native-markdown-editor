@@ -5,7 +5,9 @@ import type { HighlightSegmentType } from './markdownHighlight.types';
 /**
  * Props received by every custom segment component.
  * The component MUST render a Text (or a component that inherits from Text),
- * since segments are children of a TextInput.
+ * since segments are children of a TextInput on native platforms.
+ * On web, the component's style is extracted from the returned element tree
+ * and converted to inline CSS; use Text for cross-platform consistency.
  */
 export type SegmentComponentProps = {
 	/** Semantic type of the segment (e.g. 'bold', 'heading', 'code'). */
